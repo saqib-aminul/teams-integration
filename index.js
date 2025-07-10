@@ -1,18 +1,26 @@
 import express from "express";
 import axios from "axios";
 import open from "open";
-
+import session from "express-session";
 import dotenv from "dotenv";
+import { createMeeting } from "./graphClient.js";
+import { Meeting } from "./models/meeting.js";
+
 dotenv.config();
 
 const app = express();
 
+app.use(session({
+  secret: 'your-very-secret-key',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } // set to true if using HTTPS
+}));
+
 const authUrl = `https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/authorize`;
 const tokenUrl = `https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`;
 
-const SCOPES = ["https://graph.microsoft.com/Calendars.ReadWrite"]; // Changed scope
-
-let accessToken = ""; // Store access token
+const SCOPES = ["https://graph.microsoft.com/Calendars.ReadWrite"];
 
 app.get("/", (req, res) => {
   const params = new URLSearchParams({
@@ -46,45 +54,33 @@ app.get("/auth/callback", async (req, res) => {
     }
   );
 
-  accessToken = tokenResponse.data.access_token; // Store access token
+  req.session.accessToken = tokenResponse.data.access_token;
 
-  res.send("Authentication successful! You can now create a meeting at /create-meeting");
+  res.send("Authenticated! You can now create a meeting at /create-meeting");
 });
 
-// New route to create a meeting
 app.get("/create-meeting", async (req, res) => {
-  if (!accessToken) {
-    return res.status(401).send("Authentication required. Please go to the root path to authenticate.");
-  }
+  const token = req.session.accessToken;
+  if (!token) return res.status(401).send("Please authenticate first.");
 
-  const event = {
-    subject: "My Teams Meeting",
-    start: {
-      dateTime: new Date(new Date().getTime() + 3600000).toISOString(), // 1 hour from now
-      timeZone: "UTC",
-    },
-    end: {
-      dateTime: new Date(new Date().getTime() + 3600000 + 1800000).toISOString(), // 1.5 hours from now
-      timeZone: "UTC",
-    },
-    isOnlineMeeting: true,
-    onlineMeetingProvider: "teamsForBusiness",
-  };
+  const start = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const end = new Date(Date.now() + 90 * 60 * 1000).toISOString();
 
   try {
-    const response = await axios.post("https://graph.microsoft.com/v1.0/me/events", event, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
+    const meetingData = await createMeeting(token, "My Teams Meeting", start, end);
+
+    await Meeting.create({
+      subject: meetingData.subject,
+      startDateTime: meetingData.start.dateTime,
+      endDateTime: meetingData.end.dateTime,
+      joinUrl: meetingData.onlineMeeting?.joinUrl
     });
 
-    res.json(response.data.onlineMeeting);
+    res.json(meetingData.onlineMeeting);
   } catch (error) {
-    console.error(error.response.data);
-    res.status(500).json(error.response.data);
+    console.error(error.response ? error.response.data : error.message);
+    res.status(500).json(error.response ? error.response.data : { message: error.message });
   }
 });
-
 
 app.listen(3000, () => console.log("Listening at http://localhost:3000"));
