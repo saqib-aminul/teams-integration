@@ -1,6 +1,5 @@
 import express from "express";
 import { listEvents, createEvent, updateEvent, deleteEvent, createTeamsMeeting } from "../services/calendarService.js";
-// import { Meeting } from "../../models/meeting.js";
 
 const router = express.Router();
 
@@ -63,13 +62,6 @@ router.post("/meet/create", async (req, res) => {
   try {
     const { subject, startDateTime, endDateTime } = req.body;
     const meetingData = await createTeamsMeeting(req.session.accessToken, { subject, startDateTime, endDateTime });
-
-    // await Meeting.create({
-    //   subject: meetingData.subject,
-    //   startDateTime: meetingData.start?.dateTime,
-    //   endDateTime: meetingData.end?.dateTime,
-    //   joinUrl: meetingData.onlineMeeting?.joinUrl,
-    // });
 
     res.status(201).json(meetingData.onlineMeeting || meetingData);
   } catch (e) {

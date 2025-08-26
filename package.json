@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "build": "node build.js",
+    "build:prod": "NODE_ENV=production node build.js",
+    "start:prod": "node dist/app.js",
+    "build:dev": "node build.js && nodemon dist/app.js"
   },
   "keywords": [],
   "author": "",
@@ -13,16 +16,16 @@
   "description": "",
   "dependencies": {
     "@azure/identity": "^4.10.2",
-    "@microsoft/microsoft-graph-client": "^3.0.7",
     "@azure/msal-node": "^2.11.0",
-    "isomorphic-fetch": "^3.0.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "axios": "^1.10.0",
     "dotenv": "^17.1.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "nodemon": "^3.1.10",
-    "open": "^10.1.2",
-    "pg": "^8.16.3",
-    "sequelize": "^6.37.7"
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0"
   }
 }

@@ -1,5 +1,4 @@
 import { Client } from "@microsoft/microsoft-graph-client";
-import "isomorphic-fetch";
 
 const getClient = (accessToken) => {
   if (!accessToken) throw new Error("Missing access token");
