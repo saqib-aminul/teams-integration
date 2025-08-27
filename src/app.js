@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 
 import authRoutes from "./routes/auth.js";
 import calendarRoutes from "./routes/calendar.js";
+import subscriptionsRoutes from "./routes/subscriptions.js";
+import webhookRoutes from "./routes/webhook.js";
 
 dotenv.config();
 
@@ -29,5 +31,7 @@ app.get("/", (req, res) => res.redirect("/auth/teams"));
 // Routes (mirror google-meet structure)
 app.use("/auth", authRoutes);
 app.use("/api/teams/calendar", calendarRoutes);
+app.use("/api/teams/subscriptions", subscriptionsRoutes);
+app.use("/webhook/ms-graph", webhookRoutes);
 
 app.listen(PORT, () => console.log(`Listening at http://localhost:${PORT}`));
